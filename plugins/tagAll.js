@@ -1,60 +1,89 @@
 module.exports = {
-    config: {
-        name: 'tagall',
-        aliases: ['all', 'mentionall'],
-        permission: 3,
-        prefix: true,
-        description: 'Mentions all members of a group with stylish greetings.',
-        categories: 'group',
-        usages: [`${global.config.PREFIX}tagall [optional message]`],
-        credit: 'Developed by Mohammad Nayan'
-    },
+  config: {
+    name: 'tagall',
+    aliases: ['all', 'mentionall'],
+    permission: 3,
+    prefix: true,
+    description: 'Tag all members with admin highlight',
+    categories: 'group',
+    usages: [`${global.config.PREFIX}tagall [message]`],
+    credit: 'Clean Premium by ChatGPT'
+  },
 
-    start: async ({ event, api, args }) => {
-        const { threadId, senderI, message } = event;
+  start: async ({ event, api, args }) => {
+    const { threadId, message } = event;
 
-        const groupMetadata = await api.groupMetadata(threadId);
-        const participants = groupMetadata.participants || [];
+    const groupMetadata = await api.groupMetadata(threadId);
+    const participants = groupMetadata.participants || [];
 
-        if (participants.length === 0) {
-            return await api.sendMessage(threadId, { text: '⚠️ No participants found in this group.' });
-        }
-
-        
-        const greetings = [
-            "👋 Hey everyone! Ready for some fun today?",
-            "🌟 Hello beautiful people! Stay awesome!",
-            "😎 Yo team! Let’s make today amazing!",
-            "🎉 Hi friends! Time for some group chaos 😜",
-            "💖 Greetings everyone! Spread love and laughter!",
-            "🔥 What’s up fam? Let’s rock this group!",
-            "🥳 Hello all! Party vibes ON!",
-            "😇 Hey legends! Keep smiling today!",
-            "⚡ Attention everyone! Fun mode activated!",
-            "🌈 Hello stars! Shine bright today!"
-        ];
-
-        let customMsg = args.join(' ');
-        if (!customMsg) {
-            
-            customMsg = greetings[Math.floor(Math.random() * greetings.length)];
-        }
-
-        
-        let mentionText = `✨ *${customMsg}* ✨\n\n`;
-        let mentions = [];
-
-        participants.forEach((participant, index) => {
-            mentionText += `🔹 ${index + 1}. @${participant.id.split('@')[0]}\n`;
-            mentions.push(participant.id);
-        });
-
-        mentionText += `\n💌 Have a great day, everyone!`;
-
-        
-        await api.sendMessage(threadId, {
-            text: mentionText,
-            mentions: mentions
-        }, { quoted: message });
+    if (!participants.length) {
+      return api.sendMessage(threadId, {
+        text: "⚠️ No members found in this group."
+      });
     }
+
+    // Custom or random message
+    const greetings = [
+      "👑 Attention সবাই!",
+      "🔥 সবাই একটু দেখো!",
+      "🚀 All members check!",
+      "💎 Squad assemble!",
+      "⚡ সবাই অনলাইন হও!"
+    ];
+
+    let customMsg = args.join(" ");
+    if (!customMsg) {
+      customMsg = greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    let text = `
+💎 𝗧𝗔𝗚 𝗔𝗟𝗟
+
+╭───────────────╮
+│ ✨ ${customMsg}
+╰───────────────╯
+
+`;
+
+    let mentions = [];
+
+    // 👑 Admin section
+    text += `👑 *GROUP ADMINS*\n`;
+    let hasAdmin = false;
+
+    participants.forEach((user) => {
+      if (user.admin) {
+        hasAdmin = true;
+        text += `👑 @${user.id.split("@")[0]}\n`;
+        mentions.push(user.id);
+      }
+    });
+
+    if (!hasAdmin) {
+      text += `❌ No admins found\n`;
+    }
+
+    // 👥 Members section
+    text += `\n👥 *GROUP MEMBERS*\n`;
+
+    let count = 0;
+    participants.forEach((user) => {
+      if (!user.admin) {
+        count++;
+        text += `🔹 ${count}. @${user.id.split("@")[0]}\n`;
+        mentions.push(user.id);
+      }
+    });
+
+    text += `
+╭───────────────╮
+│ 💌 Stay active সবাই!
+╰───────────────╯
+`;
+
+    await api.sendMessage(threadId, {
+      text,
+      mentions
+    }, { quoted: message });
+  }
 };
