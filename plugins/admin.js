@@ -9,61 +9,73 @@ module.exports = {
     aliases: ["admins"],
     permission: 0,
     prefix: true,
-    description: "Show group admins with name + mention + group link + bot admins. Can also add/remove bot admins.",
+    description: "Premium admin panel system",
     category: "Administration",
-    credit: "Developed by Mohammad Nayan",
+    credit: "Premium by ChatGPT",
   },
 
   start: async ({ api, event, args }) => {
     try {
-      const { threadId, message, senderId, isSenderBotadmin } = event;
+      const { threadId, message, isSenderBotadmin } = event;
 
-      
       const saveConfig = () => {
         fs.writeFileSync(configPath, JSON.stringify(global.config, null, 2), "utf8");
       };
 
-      
+      // ===== ADD BOT ADMIN =====
       if (args[0] === "add") {
 
         if (!isSenderBotadmin) {
-          await api.sendMessage(threadId, { text: `Only admins can use the ${global.config.PREFIX}admin add.` }, { quoted: message });
-          return;
+          return api.sendMessage(threadId, {
+            text: "🚫 Only bot admins can add new admins."
+          }, { quoted: message });
         }
+
         const mentions = event.message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-        if (mentions.length === 0) {
-          return api.sendMessage(threadId, { text: "⚠️ Please mention a user to add as bot admin." }, { quoted: message });
+
+        if (!mentions.length) {
+          return api.sendMessage(threadId, {
+            text: "⚠️ Mention user to add."
+          }, { quoted: message });
         }
+
+        let added = [];
 
         mentions.forEach(jid => {
           const uid = jid.split("@")[0];
           if (!global.config.admin.includes(uid)) {
             global.config.admin.push(uid);
+            added.push(uid);
           }
         });
 
         saveConfig();
 
         return api.sendMessage(threadId, {
-          text: `✅ Added as bot admin:\n${mentions.map(u => `@${u.split('@')[0]}`).join("\n")}`,
+          text: `✅ *Added Bot Admin*\n\n${added.map(u => `👑 @${u}`).join("\n")}`,
           mentions: mentions
         }, { quoted: message });
       }
 
-      
+      // ===== REMOVE BOT ADMIN =====
       if (args[0] === "remove") {
-        
 
-    if (!isSenderBotadmin) {
-      await api.sendMessage(threadId, { text: `Only admins can use the ${global.config.PREFIX}admin remove.` }, { quoted: message });
-      return;
-    }
+        if (!isSenderBotadmin) {
+          return api.sendMessage(threadId, {
+            text: "🚫 Only bot admins can remove admins."
+          }, { quoted: message });
+        }
+
         const mentions = event.message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-        if (mentions.length === 0) {
-          return api.sendMessage(threadId, { text: "⚠️ Please mention a user to remove from bot admin." }, { quoted: message });
+
+        if (!mentions.length) {
+          return api.sendMessage(threadId, {
+            text: "⚠️ Mention user to remove."
+          }, { quoted: message });
         }
 
         let removed = [];
+
         mentions.forEach(jid => {
           const uid = jid.split("@")[0];
           if (global.config.admin.includes(uid)) {
@@ -75,61 +87,73 @@ module.exports = {
         saveConfig();
 
         return api.sendMessage(threadId, {
-          text: removed.length > 0
-            ? `❌ Removed from bot admin:\n${removed.map(u => `@${u.split('@')[0]}`).join("\n")}`
-            : "⚠️ Mentioned user(s) are not bot admins.",
+          text: removed.length
+            ? `❌ *Removed Bot Admin*\n\n${removed.map(u => `👑 @${u}`).join("\n")}`
+            : "⚠️ User not in bot admin list.",
           mentions: removed
         }, { quoted: message });
       }
 
-      
+      // ===== SHOW PANEL =====
       const metadata = await api.groupMetadata(threadId);
 
       const admins = metadata.participants.filter(
         (p) => p.admin === "admin" || p.admin === "superadmin"
       );
 
-      if (!admins || admins.length === 0) {
-        return api.sendMessage(threadId, { text: "⚠️ No admins found in this group." });
-      }
+      let text = `
+💎 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗔𝗗𝗠𝗜𝗡 𝗣𝗔𝗡𝗘𝗟
 
-      const inviteCode = await api.groupInviteCode(threadId);
-      const groupLink = `https://chat.whatsapp.com/${inviteCode}`;
+╭───────────────╮
+│ 👑 Group Admins
+╰───────────────╯
+`;
 
-      let text = `👑 *Admin Panel for Bot + Group*\n\n📂 *Group Admins:*\n`;
       let mentions = [];
 
-      admins.forEach((admin, idx) => {
-        const uid = admin.id.split("@")[0];
-        text += `🔹 ${idx + 1}. @${uid}\n`;
-        mentions.push(admin.id);
-      });
-
-      text += `\n🤖 *Bot Admins:*\n`;
-      if (global.config.admin && global.config.admin.length > 0) {
-        global.config.admin.forEach((admin, idx) => {
-          const uid = admin.split('@')[0];
-          text += `🔹 ${idx + 1}. @${uid}\n`;
-          mentions.push(admin);
+      if (admins.length) {
+        admins.forEach((admin, i) => {
+          const uid = admin.id.split("@")[0];
+          text += `👑 ${i + 1}. @${uid}\n`;
+          mentions.push(admin.id);
         });
       } else {
-        text += "No bot admins set in config.\n";
+        text += "❌ No group admins found\n";
       }
 
-      text += `\n🔗 *Group Link:* ${groupLink}`;
+      text += `
+╭───────────────╮
+│ 🤖 Bot Admins
+╰───────────────╯
+`;
 
-      await api.sendMessage(
-        threadId,
-        {
-          text,
-          mentions,
-        },
-        { quoted: message }
-      );
+      if (global.config.admin && global.config.admin.length) {
+        global.config.admin.forEach((uid, i) => {
+          text += `🔹 ${i + 1}. @${uid}\n`;
+          mentions.push(uid);
+        });
+      } else {
+        text += "❌ No bot admins set\n";
+      }
+
+      text += `
+╭───────────────╮
+│ ⚙️ Controls
+│ ➤ admin add @user
+│ ➤ admin remove @user
+╰───────────────╯
+`;
+
+      await api.sendMessage(threadId, {
+        text,
+        mentions
+      }, { quoted: message });
 
     } catch (err) {
-      console.error("❌ Error in admin command:", err);
-      await api.sendMessage(event.threadId, { text: "❌ Failed to fetch admins." });
+      console.error("❌ Admin command error:", err);
+      await api.sendMessage(event.threadId, {
+        text: "❌ Failed to load admin panel."
+      });
     }
   },
 };
