@@ -6,121 +6,90 @@ module.exports = {
     aliases: ['menu'],
     permission: 0,
     prefix: true,
-    description: 'Show all available commands.',
+    description: 'Premium clickable menu',
     category: 'Utility',
-    credit: 'Developed by Mohammad Nayan',
-    usages: ['help', 'help [command name]'],
+    credit: 'Clickable Premium by ChatGPT',
   },
 
   start: async ({ event, api, args, loadcmd }) => {
     const { threadId, getPrefix } = event;
-    const getAllCommands = () => loadcmd.map((plugin) => plugin.config);
-    const commands = getAllCommands();
 
-    const prefix = await getPrefix(threadId)
+    const commands = loadcmd.map(cmd => cmd.config);
+    const prefix = await getPrefix(threadId) || global.config.PREFIX;
 
-    const globalPrefix = global.config.PREFIX;
-
-    const mergedCategories = {
-      "⚙️ System": ["Administration", "Admin", "Owner", "Bot Management", "System"],
-      "🧠 AI & Chat": ["AI", "AI Chat"],
-      "🎬 Media": ["Media", "Video", "Image"],
-      "🧰 Utilities": ["Utility", "Utilities", "System"],
-      "👥 Group": ["Group Management", "group"],
-      "🎮 Fun": ["Fun", "Games", "greetings"],
-      "🛰️ Tools": ["Tools", "Information"]
-    };
-
+    // 🎨 Category system
     const categories = {};
-    commands.forEach((cmd) => {
-      let cat = cmd.category || cmd.categorie || cmd.categories || "📦 Uncategorized";
-      for (const merged in mergedCategories) {
-        if (mergedCategories[merged].includes(cat)) {
-          cat = merged;
-          break;
-        }
-      }
+
+    commands.forEach(cmd => {
+      let cat = cmd.category || cmd.categories || "OTHER";
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(cmd);
     });
 
-    // ───── SINGLE COMMAND INFO ─────
+    // 🔍 SINGLE COMMAND
     if (args[0]) {
-      const command = commands.find((cmd) => cmd.name.toLowerCase() === args[0].toLowerCase());
-      if (command) {
-        const infoText = `
-╭─❖  𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗜𝗡𝗙𝗢  ❖─╮
-│ 🔹 Name: ${command.name}
-│ 🔹 Aliases: ${command.aliases?.join(", ") || "None"}
-│ 🔹 Version: ${command.version || "1.0.0"}
-│ 🔹 Description: ${command.description || "No description"}
-│ 🔹 Usage: ${command.usage || command.usages?.join("\n│   ") || "Not defined"}
-│ 🔹 Permission: ${command.permission}
-│ 🔹 Category: ${command.category || "Uncategorized"}
-│ 🔹 Credits: ${command.credit || command.credits || "Mohammad Nayan"}
-╰────────────────────╯`;
-        await api.sendMessage(threadId, { text: infoText });
-      } else {
-        await api.sendMessage(threadId, { text: `⚠️ No command found named "${args[0]}".` });
+      const cmd = commands.find(c => c.name === args[0].toLowerCase());
+      if (!cmd) {
+        return api.sendMessage(threadId, { text: `❌ Command not found` });
       }
-      return;
+
+      return api.sendMessage(threadId, {
+        text: `
+💎 COMMAND INFO
+
+🔹 Name: ${cmd.name}
+🔹 Aliases: ${cmd.aliases?.join(", ") || "None"}
+🔹 Description: ${cmd.description || "No description"}
+🔹 Usage: ${cmd.usages?.join("\n") || "Not set"}
+🔹 Permission: ${cmd.permission}
+🔹 Category: ${cmd.category}
+        `
+      });
     }
-    const pkg = global.pkg;
 
-    const timezone = global.config.timeZone || "Asia/Dhaka";
-
-    const now = new Date().toLocaleString("en-US", {
-      timeZone: timezone,
-      hour12: true,
-    });
-
-    const currentTime = new Date().toLocaleTimeString("en-US", {
-      timeZone: timezone,
+    // 🕒 Time
+    const time = new Date().toLocaleTimeString("en-US", {
+      timeZone: global.config.timeZone || "Asia/Dhaka",
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit",
       hour12: true
     });
 
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      timeZone: timezone,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
-    // ───── MAIN HELP MENU ─────
-    let responseText = `
-╭─❖  𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗠𝗘𝗡𝗨  ❖─╮
-│ 💎 𝘽𝙤𝙩: ${global.config.botName || "EMon System"}
-│ 👑 Owner: ${global.config.botOwner || "Mohammad Nayan"}
-│ 🌍 Global Prefix: \`${globalPrefix}\`
-│ 👥 Group Prefix: \`${prefix || "Not set (using global)"}\`
-│ 🧩 Version: ${pkg.version}
-│ 🕒 Time: ${currentTime}
-│ 📅 Date: ${currentDate}
-│ 🌐 Timezone: ${timezone}
-│ 📜 Total Commands: ${commands.length}
-│──────────────────────`;
+    // 💎 MENU
+    let text = `
+╭━━━〔 💎 ${global.config.botName} 〕━━━╮
+┃ 👑 Owner: ${global.config.botOwner}
+┃ ⚡ Prefix: ${prefix}
+┃ 🕒 Time: ${time}
+┃ 📜 Commands: ${commands.length}
+╰━━━━━━━━━━━━━━━━━━━━━━━╯
+`;
 
-    for (const category in categories) {
-      const cmds = categories[category]
-        .map(cmd => `│   ├─ ${prefix}${cmd.name}`)
-        .join("\n");
+    for (const cat in categories) {
+      text += `\n╭─〔 ${cat.toUpperCase()} 〕\n`;
 
-      responseText += `\n│ ${category}\n${cmds}\n│──────────────────────`;
+      categories[cat].forEach(cmd => {
+        // 🔥 CLICKABLE FORMAT
+        text += `┃ ➤ \`${prefix}${cmd.name}\`\n`;
+      });
+
+      text += `╰───────────────`;
     }
 
-    responseText += `
-╰──────────────────────╯`;
+    text += `
+\n💡 Tip: Click any command above to use it instantly!
+`;
 
     try {
-      const response = await axios.get(global.config.helpPic, { responseType: 'stream' });
+      const img = await axios.get(global.config.helpPic, { responseType: "stream" });
+
       await api.sendMessage(threadId, {
-        image: { stream: response.data },
-        caption: responseText
+        image: { stream: img.data },
+        caption: text
       });
+
     } catch {
-      await api.sendMessage(threadId, { text: responseText });
+      await api.sendMessage(threadId, { text });
     }
   },
 };
