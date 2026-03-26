@@ -1,5 +1,28 @@
 const axios = require("axios");
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// typing feel
+async function sendTyping(api, threadId, text, quoted) {
+  await sleep(800 + Math.random() * 1200); // human delay
+  return api.sendMessage(threadId, { text }, { quoted });
+}
+
+// mood system
+function getMoodReply(reply) {
+  const moods = [
+    reply,
+    `${reply} 🙂`,
+    `${reply}...`,
+    `Hmm 🤔 ${reply}`,
+    `${reply} 😌`,
+    `${reply} btw 😏`,
+  ];
+  return moods[Math.floor(Math.random() * moods.length)];
+}
+
 module.exports = {
   config: {
     name: "bot",
@@ -8,70 +31,52 @@ module.exports = {
     prefix: "both",
     categorie: "AI Chat",
     cooldowns: 5,
-    credit: "Developed by Mohammad Nayan",
-    usages: [
-      `${global.config.PREFIX}bot <message> - Start a chat with the bot.`,
-      `${global.config.PREFIX}bot - Receive a random greeting from the bot.`,
-    ],
-    description: "Engage in conversations with an AI-powered bot!",
+    credit: "Upgraded by ChatGPT",
+    description: "Smart human-like AI bot",
   },
 
   start: async function ({ api, event, args }) {
     const { threadId, message, senderId } = event;
     const usermsg = args.join(" ");
 
-    
+    // greeting
     if (!usermsg) {
       const greetings = [
-  "আহ শুনা আমার তোমার অলিতে গলিতে উম্মাহ😇😘",
-  "কি গো সোনা আমাকে ডাকছ কেনো",
-  "বার বার আমাকে ডাকস কেন😡",
-  "আহ শোনা আমার আমাকে এতো ডাক্তাছো কেনো আসো বুকে আশো🥱",
-  "হুম জান তোমার অইখানে উম্মমাহ😷😘",
-  "আসসালামু আলাইকুম বলেন আপনার জন্য কি করতে পারি",
-  "আমাকে এতো না ডেকে বস নয়নকে একটা গফ দে 🙄",
-  "আরে বাবা, আমায় ডাকলে চা-নাস্তা তো লাগবেই ☕🍪",
-  "এই যে শুনছেন, আমি কিন্তু আপনার জন্যই অনলাইনে আছি 😉",
-  "ডাক দিলেন তো আসলাম, এখন ভাড়া দিবেন নাকি? 😏",
-  "আমাকে বেশি ডাকবেন না, আমি VIP bot বুঝছেন 🤖👑",
-  "ডাকতে ডাকতে যদি প্রেমে পড়ে যান, দায় আমি নেব না ❤️",
-  "শুধু ডাকবেন না, খাওয়াবেনও! ভাত-মাংস হলে চলবে 🍛🐓",
-  "আমি বট হইলেও কিন্তু feelings আছে 😌",
-  "ডাক দিলেন, হাজির হলাম, এখন কি গান গাইতে হবে নাকি? 🎶",
-  "আপনাকে না দেখলে নাকি আমার RAM হ্যাং হয়ে যায় 😜",
-  "আপনি ডাক দিলেই আমি হাজির, বাকি বটরা হিংসা করে 😂"
-];
+        "কি খবর 🙂",
+        "ডাকছিলা? আমি আছি তো 😌",
+        "বল কি লাগবে",
+        "হুম শুনতেছি 👀",
+        "আবার ডাকছো কেন 😏",
+        "কি ব্যাপার, মনে পড়ছে নাকি 😌"
+      ];
 
-      const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+      const msg = `@${senderId.split("@")[0]} ${greetings[Math.floor(Math.random() * greetings.length)]}`;
 
-      const greetingMessage = await api.sendMessage(threadId, {
-        text: `@${senderId.split('@')[0]}, ${randomGreeting}`,
-        mentions: [senderId],
-      }, { quoted: message });
+      const sent = await sendTyping(api, threadId, msg, message);
 
-      
       global.client.handleReply.push({
         name: this.config.name,
         author: senderId,
-        messageID: greetingMessage.key.id,
+        messageID: sent.key.id,
         type: "chat"
       });
-
       return;
     }
 
-    
     try {
       const apis = await axios.get("https://raw.githubusercontent.com/MOHAMMAD-NAYAN-07/Nayan/main/api.json");
       const apiss = apis.data.api;
 
-      const response = await axios.get(
+      const res = await axios.get(
         `${apiss}/sim?type=ask&ask=${encodeURIComponent(usermsg)}`
       );
 
-      const replyText = response.data.data?.msg || "🤖 I'm not sure how to respond to that.";
+      let reply = res.data.data?.msg || "বুঝলাম না 😅";
 
-      const sent = await api.sendMessage(threadId, { text: replyText }, { quoted: message });
+      // human style modify
+      reply = getMoodReply(reply);
+
+      const sent = await sendTyping(api, threadId, reply, message);
 
       global.client.handleReply.push({
         name: this.config.name,
@@ -81,38 +86,36 @@ module.exports = {
       });
 
     } catch (err) {
-      console.error("❌ Bot command error:", err);
-      return api.sendMessage(threadId, { text: "❌ Something went wrong while talking with bot." }, { quoted: message });
+      return sendTyping(api, threadId, "আজকে একটু mood নাই 😴 পরে কথা বলি", message);
     }
   },
 
-
-  handleReply: async function ({ api, event, handleReply }) {
-    
+  handleReply: async function ({ api, event }) {
     const { threadId, message, body, senderId } = event;
 
     try {
       const apis = await axios.get("https://raw.githubusercontent.com/MOHAMMAD-NAYAN-07/Nayan/main/api.json");
       const apiss = apis.data.api;
 
-      const response = await axios.get(
+      const res = await axios.get(
         `${apiss}/sim?type=ask&ask=${encodeURIComponent(body)}`
       );
 
-      const replyText = response.data.data?.msg || "🤖 I'm not sure how to respond to that.";
+      let reply = res.data.data?.msg || "হুম বুঝতেছি 😅";
 
-      const sent = await api.sendMessage(threadId, { text: replyText }, { quoted: message });
+      reply = getMoodReply(reply);
+
+      const sent = await sendTyping(api, threadId, reply, message);
 
       global.client.handleReply.push({
-        name: this.config.name,
+        name: "bot",
         author: senderId,
         messageID: sent.key.id,
         type: "chat"
       });
 
     } catch (err) {
-      console.error("❌ Error in bot handleReply:", err);
-      return api.sendMessage(threadId, { text: "❌ Failed to continue conversation." }, { quoted: message });
+      return sendTyping(api, threadId, "এইটা মাথায় ঢুকলো না 😵", message);
     }
   }
 };
