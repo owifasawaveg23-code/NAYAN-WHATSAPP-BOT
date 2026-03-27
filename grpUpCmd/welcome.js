@@ -4,16 +4,19 @@ module.exports = {
     const newMembers = event.participants;
     const groupInfo = await api.groupMetadata(event.id);
     const groupName = groupInfo.subject;
-    const totalMembers = groupInfo.participants.length;
 
-    // 🎲 Random welcome lines
-    const welcomeLines = [
-      "🌟 Welcome aboard! Enjoy your stay!",
-      "🔥 New member detected! Let's gooo!",
-      "🎉 Party just got bigger!",
-      "💎 A new legend joined the squad!",
-      "🚀 Fasten your seatbelt, fun ahead!",
-      "😎 Welcome to the coolest group!"
+    // 💖 Flirty lines
+    const flirtyLines = [
+      "😏 তুমি আসতেই গ্রুপটা আরো সুন্দর হয়ে গেল...",
+      "💘 কে তুমি? না বলে ঢুকে হৃদয় চুরি করছো!",
+      "🔥 সাবধান! তোমার এন্ট্রিতে সবাই crush খেয়ে যাবে!",
+      "😘 Welcome! কিন্তু আগে বলো, এত cute হওয়ার লাইসেন্স কোথায় পেয়েছো?",
+      "😎 তুমি কি VIP? না হলে এত style কিভাবে!",
+      "💞 তোমার জন্যই আজ group এ vibe এসেছে!",
+      "😜 Careful! কেউ তোমার প্রেমে পড়ে যেতে পারে!",
+      "💎 তুমি আসায় group এখন premium feel দিচ্ছে!",
+      "😍 First impression = Heart attack 💘",
+      "🥀 তুমি কি single? (Just asking 😏)"
     ];
 
     for (const member of newMembers) {
@@ -26,38 +29,31 @@ module.exports = {
       }
 
       const username = `@${member.split('@')[0]}`;
-      const randomLine = welcomeLines[Math.floor(Math.random() * welcomeLines.length)];
+      const line = flirtyLines[Math.floor(Math.random() * flirtyLines.length)];
 
-      // 💎 Premium UI Message
-      const welcomeMessage = `
-💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗧𝗢 𝗧𝗛𝗘 𝗚𝗥𝗢𝗨𝗣
-
+      // 💎 Stylish Flirty Message
+      const message = `
+💖 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗕𝗬 😏
 ╭───────────────╮
-│ 👋 Hello ${username}
-│ 🎉 ${randomLine}
-│ 🏷️ Group: ${groupName}
+│ 👋 Hey ${username}
+│ 💌 ${line}
+│ 🏷️ ${groupName}
 ╰───────────────╯
+💫 এখন থেকে তুমি আমাদের VIP 😎
+🔥 Stay active না হলে miss করবে!
 
-╭───────────────╮
-│ 👥 Members: ${totalMembers}
-│ 📢 Be respectful
-│ ⚡ Stay active
-│ 🎯 Enjoy your time!
-╰───────────────╯
-
-✨ 𝗘𝗻𝗷𝗼𝘆 & 𝗵𝗮𝘃𝗲 𝗳𝘂𝗻 🚀
+🍷 𝐀𝐯𝐢 💸
 `;
 
-      // 📸 Send with profile pic (if available)
       if (profilePicUrl) {
         await api.sendMessage(event.id, {
           image: { url: profilePicUrl },
-          caption: welcomeMessage,
+          caption: message,
           mentions: [member]
         });
       } else {
         await api.sendMessage(event.id, {
-          text: welcomeMessage,
+          text: message,
           mentions: [member]
         });
       }
