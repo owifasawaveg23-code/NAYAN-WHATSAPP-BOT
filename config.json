@@ -3,20 +3,17 @@
   "author": "Xahid Bot",
   "botName": "Xahid Bot",
   "botOwner": "XAHID PRIME",
-
   "ownerNumber": "8801838569277",
-  "botNumber": "8801620862668",
-  "botUid": "200532509605937",
-
+  "botNumber": "Your bot number",
+  "botUid": "",
   "PREFIX": "/",
   "timeZone": "Asia/Dhaka",
   "PORT": "3000",
   "delay": 100,
-
+  
   "admin": [
     "8801838569277"
   ],
-
   "autoUpdate": true,
   "commandMode": "public",
 
