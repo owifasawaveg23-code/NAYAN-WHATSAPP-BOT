@@ -1,7 +1,7 @@
 {
-  "name": "NAYAN-WHATSAPP-BOT",
+  "name": "XAHID-PRIME-BOT",
   "version": "1.1.5",
-  "description": "WhatsApp Bot Created by Mohammad Nayan",
+  "description": "WhatsApp Bot Created by XAHID PRIME",
   "main": "index.js",
   "scripts": {
     "start": "node index",
@@ -16,14 +16,13 @@
     "whatsapp-bot-multi-device",
     "best-whatsapp-bot",
     "whatsappbots",
-    "nayanbot",
-    "nayan-bot",
-    "nayan-bot-github",
-    "nayan-bot-md",
-    "nayanbot-whatsapp-bot",
+    "xahidprime-bot",
+    "xahid-prime-bot",
+    "xahid-prime-bot-github",
+    "xahidprime-whatsapp-bot",
     "github-whatsapp-bot"
   ],
-  "author": "Mohammad Nayan",
+  "author": "XAHID PRIME",
   "license": "ISC",
   "dependencies": {
     "@hapi/boom": "^10.0.1",
