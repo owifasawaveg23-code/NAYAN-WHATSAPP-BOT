@@ -1,28 +1,35 @@
 {
   "packname": "My Sticker Pack",
-  "author": "My Bot",
+  "author": "Xahid Bot",
   "botName": "Xahid Bot",
   "botOwner": "XAHID PRIME",
-  "ownerNumber": "880838569277",
-  "botNumber": "Your Bot Number",
-  "autoUpdate": true,
-  "timeZone": "Asia/Dhaka",
-  "botUid": "",
+
+  "ownerNumber": "8801838569277",
+  "botNumber": "8801620862668",
+  "botUid": "200532509605937",
+
   "PREFIX": "/",
-  "admin": [
-    "8801838569277",
-    "your grp id"
-  ],
-  "helpPic": "https://i.postimg.cc/wxRt2g1G/Picsart-26-01-30-07-09-38-578.png",
-  "welPic": "https://i.postimg.cc/wxRt2g1G/Picsart-26-01-30-07-09-38-578.png",
+  "timeZone": "Asia/Dhaka",
   "PORT": "3000",
   "delay": 100,
+
+  "admin": [
+    "8801838569277"
+  ],
+
+  "autoUpdate": true,
+  "commandMode": "public",
+
+  "helpPic": "https://i.postimg.cc/wxRt2g1G/Picsart-26-01-30-07-09-38-578.png",
+  "welPic": "https://i.postimg.cc/wxRt2g1G/Picsart-26-01-30-07-09-38-578.png",
+
   "msg": {
     "modAdmin": false,
     "ban": false
   },
+
   "imgurKey": "1e87dfc28df0bac",
   "giphyApiKey": "qnl7ssQChTdPjsKta2Ax2LMaGXz303tq",
-  "commandMode": "public",
-  "description": "This is a bot for managing group commands and automating tasks."
+
+  "description": "Premium WhatsApp bot with smart automation."
 }
