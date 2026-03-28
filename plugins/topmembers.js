@@ -1,7 +1,62 @@
-  // sort
-  const sorted = entries
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit);
+const fs = require('fs');
+const path = require('path');
+
+const dataFilePath = path.join(__dirname, '..', 'Nayan', 'data', 'messageCount.json');
+
+function loadMessageCounts() {
+  if (fs.existsSync(dataFilePath)) {
+    return JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
+  }
+  return {};
+}
+
+function saveMessageCounts(data) {
+  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
+}
+
+function incrementMessageCount(groupId, userId) {
+  const data = loadMessageCounts();
+
+  if (!data[groupId]) data[groupId] = {};
+  if (!data[groupId][userId]) data[groupId][userId] = 0;
+
+  data[groupId][userId] += 1;
+  saveMessageCounts(data);
+}
+
+async function topMembers({ sock, chatId, isGroup, limit }) {
+  if (!isGroup) {
+    return sock.sendMessage(chatId, { text: "⚠️ Group only." });
+  }
+
+  const data = loadMessageCounts();
+  const groupData = data[chatId] || {};
+
+  let sorted = Object.entries(groupData)
+    .sort((a, b) => b[1] - a[1]);
+
+  const ownerId = global.config.ownerNumber + "@s.whatsapp.net";
+
+  // 👉 owner remove (duplicate avoid)
+  sorted = sorted.filter(([uid]) => uid !== ownerId);
+
+  // 👉 limit slice
+  sorted = sorted.slice(0, limit);
+
+  // 🎲 random gap (5–15)
+  const gap = Math.floor(Math.random() * 11) + 5;
+
+  let ownerCount = 0;
+  if (sorted[1]) {
+    ownerCount = Math.max(0, sorted[1][1] - gap);
+  }
+
+  // 👉 insert owner at 3rd
+  if (limit >= 3) {
+    sorted.splice(2, 0, [ownerId, ownerCount]);
+  }
+
+  sorted = sorted.slice(0, limit);
 
   if (!sorted.length) {
     return sock.sendMessage(chatId, { text: "📭 No data." });
@@ -14,9 +69,9 @@
   sorted.forEach(([userId, count], index) => {
     const medal = medals[index] || "•";
 
-    const isAdmin = botAdmins.includes(userId);
-    const name = isAdmin
-      ? `👑 @${userId.split("@")[0]}`
+    const isOwner = userId === ownerId;
+    const name = isOwner
+      ? `@${userId.split("@")[0]}`
       : `@${userId.split("@")[0]}`;
 
     text += `${medal} ${name} — ${count}\n`;
@@ -38,10 +93,9 @@ module.exports = {
     cooldowns: 5,
     description: "Top active members",
     category: "Utility",
-    credit: "Premium by ChatGPT"
+    credit: "Random gap by ChatGPT"
   },
 
-  // 📊 Track messages
   event: async ({ event }) => {
     const { threadId, senderId, isGroup } = event;
     if (isGroup) {
@@ -49,7 +103,6 @@ module.exports = {
     }
   },
 
-  // 🔒 Command
   start: async ({ event, api, args }) => {
     const { threadId, senderId, isGroup } = event;
 
@@ -68,7 +121,7 @@ module.exports = {
 
     if (!isGroupAdmin && !isBotAdmin) {
       return api.sendMessage(threadId, {
-        text: "🚫 Admin only command."
+        text: "Aga admin hois tarpor 😂"
       });
     }
 
